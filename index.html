@@ -9,413 +9,318 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @media print {
-            body * {
-                visibility: hidden;
+            @page { margin: 0; size: auto; }
+            body { margin: 0; padding: 0; }
+            body * { visibility: hidden; }
+            #quotationPreview, #quotationPreview * { 
+                visibility: visible; 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            #quotationPreview, #quotationPreview * {
-                visibility: visible;
+            #quotationPreview { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                margin: 0;
+                padding: 0;
+                box-shadow: none !important;
+                border-radius: 0 !important;
             }
-            #quotationPreview {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .no-print {
-                display: none !important;
-            }
+            .no-print { display: none !important; }
+            .print-break { page-break-inside: avoid; }
         }
         
-        @media (max-width: 768px) {
-            .mobile-stack {
-                flex-direction: column !important;
-            }
-            .mobile-full {
-                width: 100% !important;
-            }
-            .mobile-grid-1 {
-                grid-template-columns: 1fr !important;
-            }
-            .mobile-grid-2 {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-            .mobile-text-sm {
-                font-size: 0.875rem !important;
-            }
-            .mobile-p-2 {
-                padding: 0.5rem !important;
-            }
+        .quotation-header {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
         }
     </style>
-<base target="_blank">
 </head>
-<body class="bg-gray-100 min-h-screen p-2 md:p-4">
+<body class="bg-gray-100 min-h-screen p-4">
 
     <!-- Tool Container -->
     <div class="max-w-6xl mx-auto">
         
         <!-- Header -->
-        <div class="bg-orange-500 text-white p-3 md:p-4 rounded-t-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-            <h1 class="text-lg md:text-xl font-bold text-center sm:text-left">
-                <i class="fas fa-calculator mr-2"></i>Quotation Generator Tool
-            </h1>
-            <div class="text-xs md:text-sm opacity-90" id="currentDate">23 March 2026</div>
+        <div class="bg-orange-500 text-white p-4 rounded-t-lg flex justify-between items-center no-print">
+            <h1 class="text-xl font-bold"><i class="fas fa-calculator mr-2"></i>Quotation Generator Tool</h1>
+            <div class="text-sm opacity-90" id="currentDate">23 March 2026</div>
         </div>
 
         <!-- Input Form -->
-        <div class="bg-white p-3 md:p-6 rounded-b-lg shadow-lg mb-4 md:mb-6">
-            
-            <!-- Client Info -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        <div class="bg-white p-6 rounded-b-lg shadow-lg mb-6 no-print">
+            <div class="grid md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Client Name</label>
-                    <input type="text" id="clientName" placeholder="Enter client name" 
-                        class="w-full p-2 text-sm border rounded focus:border-orange-500 focus:outline-none">
+                    <label class="block text-sm font-semibold mb-1">Client Name</label>
+                    <input type="text" id="clientName" placeholder="Enter client name" class="w-full p-2 border rounded focus:border-orange-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Project Name</label>
-                    <input type="text" id="projectName" placeholder="Enter project name" 
-                        class="w-full p-2 text-sm border rounded focus:border-orange-500 focus:outline-none">
+                    <label class="block text-sm font-semibold mb-1">Project Name</label>
+                    <input type="text" id="projectName" placeholder="Enter project name" class="w-full p-2 border rounded focus:border-orange-500 focus:outline-none">
                 </div>
-                <div class="sm:col-span-2 md:col-span-1">
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Timeline (Days)</label>
-                    <input type="number" id="timeline" value="5" min="1"
-                        class="w-full p-2 text-sm border rounded focus:border-orange-500 focus:outline-none">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Timeline (Days)</label>
+                    <input type="number" id="timeline" value="5" class="w-full p-2 border rounded focus:border-orange-500 focus:outline-none">
                 </div>
             </div>
 
-            <!-- Line Items Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                <h3 class="font-bold text-gray-700 text-sm md:text-base">Line Items</h3>
-                <button onclick="addRow()" class="bg-green-500 text-white px-3 py-1.5 rounded text-xs md:text-sm hover:bg-green-600 w-full sm:w-auto">
-                    <i class="fas fa-plus mr-1"></i>Add Item
-                </button>
-            </div>
-
-            <!-- Line Items Container -->
-            <div class="mb-4 overflow-x-auto">
-                <div id="lineItems" class="space-y-2 min-w-full">
-                    
-                    <!-- Header Row (Desktop) -->
-                    <div class="hidden md:grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase px-2">
-                        <div class="col-span-5">Description</div>
-                        <div class="col-span-2">Qty</div>
-                        <div class="col-span-3">Rate (₹)</div>
-                        <div class="col-span-2 text-right">Amount</div>
-                    </div>
-
-                    <!-- Item 1 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="Homepage Design & Development">
+            <!-- Line Items -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-gray-700">Line Items</h3>
+                    <button onclick="addRow()" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                        <i class="fas fa-plus mr-1"></i>Add Item
+                    </button>
+                </div>
+                <div id="lineItems" class="space-y-2">
+                    <!-- Row 1 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="Homepage Design & Development">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="15000">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="15000">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">15,000</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">15,000</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 2 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="Inner Pages (After 5-6 pages) @ ₹600-700/page">
+                    <!-- Row 2 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="Inner Pages (After 5-6 pages) @ ₹600-700/page">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="0" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="0" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="650">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="650">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">0</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">0</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 3 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="Dynamic Website with Admin Backend">
+                    <!-- Row 3 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="Dynamic Website with Admin Backend">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="32500">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="32500">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">32,500</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">32,500</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 4 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="E-commerce Website">
+                    <!-- Row 4 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="E-commerce Website">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="0" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="0" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="32500">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="32500">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">0</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">0</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 5 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="Figma UI/UX Design (Add-on)">
+                    <!-- Row 5 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="Figma UI/UX Design (Add-on)">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="8000">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="8000">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">8,000</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">8,000</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 6 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="Mobile Responsive">
+                    <!-- Row 6 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="Mobile Responsive">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="10000">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="10000">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">10,000</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">10,000</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
-                    <!-- Item 7 -->
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0">
-                        <div class="md:col-span-5">
-                            <label class="md:hidden text-xs font-semibold">Description</label>
-                            <input type="text" class="item-desc w-full p-2 text-sm border rounded" value="SEO Code Friendly">
+                    <!-- Row 7 -->
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                        <div class="col-span-5">
+                            <input type="text" class="item-desc w-full p-2 border rounded text-sm" value="SEO Code Friendly">
                         </div>
-                        <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                            <div>
-                                <label class="md:hidden text-xs font-semibold">Qty</label>
-                                <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                            </div>
+                        <div class="col-span-2">
+                            <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                         </div>
-                        <div class="md:col-span-3">
-                            <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                            <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="0">
+                        <div class="col-span-3">
+                            <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="0">
                         </div>
-                        <div class="flex items-end justify-between md:col-span-2 gap-2">
-                            <div class="text-right flex-1">
-                                <label class="md:hidden text-xs font-semibold">Amount</label>
-                                <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">0</span>
-                            </div>
-                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        <div class="col-span-2 flex items-center gap-2">
+                            <span class="item-amt text-sm font-semibold">0</span>
+                            <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-
                 </div>
             </div>
 
             <!-- Payment Terms -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div class="grid grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Advance %</label>
-                    <input type="number" id="pay1" value="25" min="0" max="100"
-                        class="w-full p-2 text-sm border rounded">
+                    <label class="block text-sm font-semibold mb-1">Advance %</label>
+                    <input type="number" id="pay1" value="25" class="w-full p-2 border rounded">
                 </div>
                 <div>
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Milestone %</label>
-                    <input type="number" id="pay2" value="25" min="0" max="100"
-                        class="w-full p-2 text-sm border rounded">
+                    <label class="block text-sm font-semibold mb-1">Milestone %</label>
+                    <input type="number" id="pay2" value="25" class="w-full p-2 border rounded">
                 </div>
                 <div>
-                    <label class="block text-xs md:text-sm font-semibold mb-1">Final %</label>
-                    <input type="number" id="pay3" value="50" min="0" max="100"
-                        class="w-full p-2 text-sm border rounded">
+                    <label class="block text-sm font-semibold mb-1">Final %</label>
+                    <input type="number" id="pay3" value="50" class="w-full p-2 border rounded">
                 </div>
             </div>
 
-            <button onclick="updatePreview()" class="w-full bg-orange-500 text-white py-2 md:py-3 rounded font-semibold hover:bg-orange-600 text-sm md:text-base">
+            <button onclick="updatePreview()" class="w-full bg-orange-500 text-white py-2 rounded font-semibold hover:bg-orange-600">
                 <i class="fas fa-sync mr-2"></i>Update Preview
             </button>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-2 md:gap-4 mb-4 md:mb-6 no-print">
-            <button onclick="downloadPDF()" class="flex-1 bg-red-500 text-white py-2 md:py-3 rounded-lg font-semibold hover:bg-red-600 shadow text-sm md:text-base">
+        <div class="flex gap-4 mb-6 no-print">
+            <button onclick="downloadPDF()" class="flex-1 bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 shadow">
                 <i class="fas fa-file-pdf mr-2"></i>Download PDF
             </button>
-            <button onclick="downloadImage()" class="flex-1 bg-blue-500 text-white py-2 md:py-3 rounded-lg font-semibold hover:bg-blue-600 shadow text-sm md:text-base">
+            <button onclick="downloadImage()" class="flex-1 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 shadow">
                 <i class="fas fa-image mr-2"></i>Download Image
             </button>
-            <button onclick="exportText()" class="flex-1 bg-green-500 text-white py-2 md:py-3 rounded-lg font-semibold hover:bg-green-600 shadow text-sm md:text-base">
+            <button onclick="exportText()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 shadow">
                 <i class="fas fa-file-alt mr-2"></i>Export Text
             </button>
         </div>
 
-        <!-- Preview Area -->
-        <div id="quotationPreview" class="bg-white rounded-lg shadow-lg overflow-hidden max-w-full">
+        <!-- Preview Area (For PDF/Image capture) -->
+        <div id="quotationPreview" class="bg-white rounded-lg shadow-lg overflow-hidden">
             
-            <!-- Header -->
-            <div class="bg-orange-500 text-white p-4 md:p-6">
-                <h1 class="text-lg md:text-2xl font-bold">Website Development Quotation</h1>
-                <p class="text-xs md:text-sm opacity-90" id="previewDate">Date: 23 March 2026</p>
+            <!-- Header with Logo -->
+            <div class="quotation-header text-white p-6 print-break">
+                <div class="flex items-center gap-4">
+                    <img src="https://acssite.vercel.app/Web_Image/LOGO%20(1).webp" 
+                         alt="ACS Logo" 
+                         class="h-16 w-auto bg-white rounded-lg p-2 shadow-lg"
+                         crossorigin="anonymous"
+                         id="previewLogo">
+                    <div>
+                        <h1 class="text-2xl font-bold">Website Development Quotation</h1>
+                        <p class="text-sm opacity-90 mt-1" id="previewDate">Date: 23 March 2026</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Client Info -->
-            <div class="p-4 md:p-6 border-b">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-6 border-b print-break">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-xs text-gray-500 uppercase block mb-1">Client</label>
-                        <p class="font-semibold text-sm md:text-lg" id="previewClient">[Client Name]</p>
+                        <label class="text-xs text-gray-500 uppercase font-semibold">Client</label>
+                        <p class="font-semibold text-lg text-gray-800" id="previewClient">[Client Name]</p>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-500 uppercase block mb-1">Project</label>
-                        <p class="font-semibold text-sm md:text-lg" id="previewProject">[Project Name]</p>
+                        <label class="text-xs text-gray-500 uppercase font-semibold">Project</label>
+                        <p class="font-semibold text-lg text-gray-800" id="previewProject">[Project Name]</p>
                     </div>
                 </div>
             </div>
 
             <!-- Items Table -->
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table class="w-full text-left min-w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-2 md:p-3 text-xs md:text-sm">Description</th>
-                            <th class="p-2 md:p-3 text-xs md:text-sm w-16">Qty</th>
-                            <th class="p-2 md:p-3 text-xs md:text-sm w-24">Rate (₹)</th>
-                            <th class="p-2 md:p-3 text-xs md:text-sm text-right w-24">Amount (₹)</th>
+            <div class="p-6 print-break">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-orange-100">
+                            <th class="p-3 text-sm font-bold text-orange-800 border-b-2 border-orange-200">Description</th>
+                            <th class="p-3 text-sm font-bold text-orange-800 border-b-2 border-orange-200 w-20">Qty</th>
+                            <th class="p-3 text-sm font-bold text-orange-800 border-b-2 border-orange-200 w-32">Rate (₹)</th>
+                            <th class="p-3 text-sm font-bold text-orange-800 border-b-2 border-orange-200 text-right w-32">Amount (₹)</th>
                         </tr>
                     </thead>
-                    <tbody id="previewTableBody" class="text-xs md:text-sm">
+                    <tbody id="previewTableBody" class="text-gray-700">
                         <!-- Dynamic content -->
                     </tbody>
                 </table>
             </div>
 
             <!-- Timeline -->
-            <div class="px-4 md:px-6 py-3 md:py-4 bg-orange-50 border-y">
-                <p class="text-xs md:text-sm font-semibold text-orange-800">
-                    ⏱️ Project Timeline: <span id="previewTimeline">5</span> Days
+            <div class="px-6 py-4 bg-orange-50 border-y print-break">
+                <p class="text-sm font-bold text-orange-800">
+                    <i class="far fa-clock mr-2"></i>Project Timeline: <span id="previewTimeline">5</span> Days
                 </p>
             </div>
 
             <!-- Payment Terms -->
-            <div class="p-4 md:p-6 border-b">
-                <h3 class="font-bold mb-3 md:mb-4 text-gray-800 text-sm md:text-base">Payment Schedule</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 text-center">
-                    <div class="bg-gray-100 p-3 md:p-4 rounded">
-                        <div class="text-xl md:text-2xl font-bold text-orange-500" id="previewPay1">25%</div>
-                        <div class="text-xs md:text-sm text-gray-600 mt-1">Advance</div>
-                        <div class="text-xs text-gray-400">Project Start</div>
+            <div class="p-6 border-b print-break">
+                <h3 class="font-bold mb-4 text-gray-800 text-lg border-b pb-2">Payment Schedule</h3>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-gradient-to-b from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                        <div class="text-3xl font-bold text-orange-600" id="previewPay1">25%</div>
+                        <div class="text-sm font-semibold text-gray-700 mt-2">Advance</div>
+                        <div class="text-xs text-gray-500 mt-1">Project Start</div>
                     </div>
-                    <div class="bg-gray-100 p-3 md:p-4 rounded">
-                        <div class="text-xl md:text-2xl font-bold text-orange-500" id="previewPay2">25%</div>
-                        <div class="text-xs md:text-sm text-gray-600 mt-1">Milestone</div>
-                        <div class="text-xs text-gray-400">50% Work Done</div>
+                    <div class="bg-gradient-to-b from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                        <div class="text-3xl font-bold text-orange-600" id="previewPay2">25%</div>
+                        <div class="text-sm font-semibold text-gray-700 mt-2">Milestone</div>
+                        <div class="text-xs text-gray-500 mt-1">50% Work Done</div>
                     </div>
-                    <div class="bg-gray-100 p-3 md:p-4 rounded">
-                        <div class="text-xl md:text-2xl font-bold text-orange-500" id="previewPay3">50%</div>
-                        <div class="text-xs md:text-sm text-gray-600 mt-1">Final</div>
-                        <div class="text-xs text-gray-400">Project Complete</div>
+                    <div class="bg-gradient-to-b from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+                        <div class="text-3xl font-bold text-orange-600" id="previewPay3">50%</div>
+                        <div class="text-sm font-semibold text-gray-700 mt-2">Final</div>
+                        <div class="text-xs text-gray-500 mt-1">Project Complete</div>
                     </div>
                 </div>
             </div>
 
             <!-- Totals -->
-            <div class="p-4 md:p-6 bg-gray-50">
-                <div class="w-full sm:w-1/2 ml-auto">
-                    <div class="flex justify-between text-base md:text-lg font-bold border-t pt-2">
-                        <span>Total</span>
-                        <span id="previewTotal">₹0</span>
+            <div class="p-6 bg-gray-50 print-break">
+                <div class="w-full md:w-1/2 ml-auto">
+                    <div class="flex justify-between items-center text-xl font-bold border-t-2 border-orange-300 pt-3">
+                        <span class="text-gray-800">Total Amount</span>
+                        <span class="text-orange-600 text-2xl" id="previewTotal">₹0</span>
                     </div>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="p-4 md:p-6 text-xs md:text-sm text-gray-500 border-t">
-                <p>Valid for 30 days. GST not applicable (freelancer).</p>
-                <p class="mt-1">Generated on: <span id="footerDate">23 March 2026</span></p>
+            <div class="p-6 bg-gray-100 border-t print-break">
+                <div class="text-center">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        Quotation Confirmed? Please take a screenshot, sign it, and send back to us via WhatsApp or Email
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        Valid for 30 days • GST not applicable (freelancer)
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -440,37 +345,27 @@
         function addRow() {
             const container = document.getElementById('lineItems');
             const div = document.createElement('div');
-            div.className = 'grid grid-cols-1 md:grid-cols-12 gap-2 p-2 bg-gray-50 rounded border md:bg-transparent md:border-0 md:p-0';
+            div.className = 'grid grid-cols-12 gap-2 items-center';
             div.innerHTML = `
-                <div class="md:col-span-5">
-                    <label class="md:hidden text-xs font-semibold">Description</label>
-                    <input type="text" class="item-desc w-full p-2 text-sm border rounded" placeholder="Description">
+                <div class="col-span-5">
+                    <input type="text" class="item-desc w-full p-2 border rounded text-sm" placeholder="Description">
                 </div>
-                <div class="grid grid-cols-2 md:col-span-2 gap-2">
-                    <div>
-                        <label class="md:hidden text-xs font-semibold">Qty</label>
-                        <input type="number" class="item-qty w-full p-2 text-sm border rounded" value="1" min="0">
-                    </div>
+                <div class="col-span-2">
+                    <input type="number" class="item-qty w-full p-2 border rounded text-sm" value="1" min="0">
                 </div>
-                <div class="md:col-span-3">
-                    <label class="md:hidden text-xs font-semibold">Rate (₹)</label>
-                    <input type="text" class="item-rate w-full p-2 text-sm border rounded" value="0">
+                <div class="col-span-3">
+                    <input type="text" class="item-rate w-full p-2 border rounded text-sm" value="0">
                 </div>
-                <div class="flex items-end justify-between md:col-span-2 gap-2">
-                    <div class="text-right flex-1">
-                        <label class="md:hidden text-xs font-semibold">Amount</label>
-                        <span class="item-amt block p-2 text-sm font-semibold text-right md:text-left md:bg-transparent md:p-0">0</span>
-                    </div>
-                    <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700 p-2 md:p-0 mb-1">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <div class="col-span-2 flex items-center gap-2">
+                    <span class="item-amt text-sm font-semibold">0</span>
+                    <button onclick="removeRow(this)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
                 </div>
             `;
             container.appendChild(div);
         }
 
         function removeRow(btn) {
-            const rows = document.querySelectorAll('#lineItems > div');
+            const rows = document.querySelectorAll('#lineItems .grid');
             if (rows.length > 1) {
                 btn.closest('.grid').remove();
             } else {
@@ -479,22 +374,19 @@
         }
 
         function updatePreview() {
-            // Update header info
             document.getElementById('previewClient').textContent = document.getElementById('clientName').value || '[Client Name]';
             document.getElementById('previewProject').textContent = document.getElementById('projectName').value || '[Project Name]';
             document.getElementById('previewTimeline').textContent = document.getElementById('timeline').value;
             
-            // Update payment terms
             document.getElementById('previewPay1').textContent = document.getElementById('pay1').value + '%';
             document.getElementById('previewPay2').textContent = document.getElementById('pay2').value + '%';
             document.getElementById('previewPay3').textContent = document.getElementById('pay3').value + '%';
 
-            // Update table
             const tbody = document.getElementById('previewTableBody');
             tbody.innerHTML = '';
             let total = 0;
 
-            document.querySelectorAll('#lineItems > div').forEach(row => {
+            document.querySelectorAll('#lineItems .grid').forEach(row => {
                 const desc = row.querySelector('.item-desc').value;
                 const qty = row.querySelector('.item-qty').value;
                 const rate = row.querySelector('.item-rate').value;
@@ -504,12 +396,12 @@
 
                 if (desc || amt > 0) {
                     const tr = document.createElement('tr');
-                    tr.className = 'border-b';
+                    tr.className = 'border-b border-gray-200 hover:bg-gray-50';
                     tr.innerHTML = `
-                        <td class="p-2 md:p-3">${desc}</td>
-                        <td class="p-2 md:p-3">${qty}</td>
-                        <td class="p-2 md:p-3">${rate}</td>
-                        <td class="p-2 md:p-3 text-right">${amt.toLocaleString('en-IN')}</td>
+                        <td class="p-3 font-medium">${desc}</td>
+                        <td class="p-3">${qty}</td>
+                        <td class="p-3">₹${rate}</td>
+                        <td class="p-3 text-right font-semibold">₹${amt.toLocaleString('en-IN')}</td>
                     `;
                     tbody.appendChild(tr);
                 }
@@ -520,30 +412,78 @@
 
         function downloadPDF() {
             updatePreview();
-            window.print();
+            setTimeout(function() {
+                window.print();
+            }, 100);
         }
 
         function downloadImage() {
             updatePreview();
-            const element = document.getElementById('quotationPreview');
             
-            html2canvas(element, {
-                scale: 2,
-                backgroundColor: '#ffffff',
-                useCORS: true
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'quotation_' + Date.now() + '.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }).catch(err => {
-                alert('Error generating image. Please try again.');
-                console.error(err);
-            });
+            const element = document.getElementById('quotationPreview');
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+            btn.disabled = true;
+
+            const logo = document.getElementById('previewLogo');
+            
+            function captureImage() {
+                html2canvas(element, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                }).then(function(canvas) {
+                    try {
+                        canvas.toBlob(function(blob) {
+                            if (blob) {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.download = 'quotation_' + new Date().getTime() + '.png';
+                                link.href = url;
+                                document.body.appendChild(link);
+                                link.click();
+                                setTimeout(function() {
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                }, 100);
+                            } else {
+                                throw new Error('Blob failed');
+                            }
+                        }, 'image/png');
+                    } catch (e) {
+                        const image = canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.download = 'quotation_' + new Date().getTime() + '.png';
+                        link.href = image;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                }).catch(function(err) {
+                    console.error('html2canvas error:', err);
+                    alert('Error generating image. Try PDF instead.');
+                }).finally(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                });
+            }
+
+            if (logo.complete) {
+                captureImage();
+            } else {
+                logo.onload = captureImage;
+                logo.onerror = captureImage;
+                setTimeout(captureImage, 2000);
+            }
         }
 
         function exportText() {
             updatePreview();
+            
             const date = new Date().toLocaleDateString('en-IN');
             let text = 'WEBSITE DEVELOPMENT QUOTATION\n';
             text += '================================\n';
@@ -553,40 +493,49 @@
             text += 'ITEMS:\n';
             text += '----------------------------------------\n';
             
-            document.querySelectorAll('#previewTableBody tr').forEach(tr => {
-                const tds = tr.querySelectorAll('td');
-                text += tds[0].textContent + '\n';
-                text += '  Qty: ' + tds[1].textContent + ' | Rate: ₹' + tds[2].textContent + ' | Amount: ₹' + tds[3].textContent + '\n\n';
-            });
+            const rows = document.querySelectorAll('#previewTableBody tr');
+            if (rows.length === 0) {
+                text += 'No items\n';
+            } else {
+                rows.forEach(function(tr) {
+                    const tds = tr.querySelectorAll('td');
+                    text += tds[0].textContent + '\n';
+                    text += '  Qty: ' + tds[1].textContent + ' | Rate: ' + tds[2].textContent + ' | Amount: ' + tds[3].textContent + '\n\n';
+                });
+            }
             
             text += '----------------------------------------\n';
             text += 'TOTAL: ' + document.getElementById('previewTotal').textContent + '\n\n';
-            text += 'TIMELINE: ' + document.getElementById('timeline').value + ' Days\n';
+            text += 'TIMELINE: ' + document.getElementById('timeline').value + ' Days\n\n';
             text += 'PAYMENT TERMS:\n';
             text += '  - ' + document.getElementById('pay1').value + '% Advance (Project Start)\n';
             text += '  - ' + document.getElementById('pay2').value + '% Milestone (50% Work Done)\n';
             text += '  - ' + document.getElementById('pay3').value + '% Final (Project Complete)\n\n';
-            text += 'NOTES:\n';
-            text += '- Valid for 30 days\n';
-            text += '- GST not applicable (freelancer)\n';
-            text += '- Inner pages after 5-6 pages charged @ ₹600-700/page\n';
-            text += '- Dynamic website & E-commerce: ₹25k-40k (project based)\n';
+            text += 'CONFIRMATION:\n';
+            text += 'Quotation Confirmed? Please take a screenshot, sign it, and send back to us via WhatsApp or Email\n\n';
+            text += 'Valid for 30 days • GST not applicable (freelancer)\n';
 
-            const blob = new Blob([text], { type: 'text/plain' });
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = 'quotation_' + Date.now() + '.txt';
-            link.href = window.URL.createObjectURL(blob);
+            link.href = url;
+            link.download = 'quotation_' + new Date().getTime() + '.txt';
+            document.body.appendChild(link);
             link.click();
+            setTimeout(function() {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
         }
 
-        // Set current date
         const today = new Date();
         const dateStr = today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
         document.getElementById('currentDate').textContent = dateStr;
         document.getElementById('previewDate').textContent = 'Date: ' + dateStr;
-        document.getElementById('footerDate').textContent = dateStr;
 
-        // Initialize
+        document.querySelectorAll('#lineItems .grid').forEach(function(row) {
+            calculateRow(row);
+        });
         updatePreview();
     </script>
 
